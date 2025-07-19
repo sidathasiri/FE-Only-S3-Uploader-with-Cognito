@@ -1,0 +1,11 @@
+export const COGNITO_POOL_ID = process.env.REACT_APP_COGNITO_USER_POOL_ID;
+export const COGNITO_IDENTITY_POOL_ID =
+  process.env.REACT_APP_COGNITO_IDENTITY_POOL_ID;
+export const REGION = "us-east-1";
+export const COGNITO_CLIENT_ID = process.env.REACT_APP_COGNITO_CLIENT_ID;
+export const COGNITO_DOMAIN = process.env.REACT_APP_COGNITO_DOMAIN;
+export const COGNITO_REDIRECT_URI = process.env.REACT_APP_COGNITO_REDIRECT_URI;
+export const COGNITO_LOGOUT_URI = process.env.REACT_APP_COGNITO_LOGOUT_URI;
+
+console.log('process.env.REACT_APP_COGNITO_USER_POOL_ID', process.env.REACT_APP_COGNITO_USER_POOL_ID);
+
