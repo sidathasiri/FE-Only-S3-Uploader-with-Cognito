@@ -6,6 +6,6 @@ export const COGNITO_CLIENT_ID = process.env.REACT_APP_COGNITO_CLIENT_ID;
 export const COGNITO_DOMAIN = process.env.REACT_APP_COGNITO_DOMAIN;
 export const COGNITO_REDIRECT_URI = process.env.REACT_APP_COGNITO_REDIRECT_URI;
 export const COGNITO_LOGOUT_URI = process.env.REACT_APP_COGNITO_LOGOUT_URI;
+export const UPLOAD_BUCKET_NAME = process.env.REACT_APP_UPLOAD_BUCKET_NAME;
 
-console.log('process.env.REACT_APP_COGNITO_USER_POOL_ID', process.env.REACT_APP_COGNITO_USER_POOL_ID);
 

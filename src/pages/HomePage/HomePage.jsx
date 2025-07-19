@@ -1,3 +1,4 @@
+import { FileUploadService } from "../../services/FileUploadService";
 import Header from "./Header";
 import { styles } from "./styles";
 import React from "react";
@@ -39,6 +40,10 @@ export default function HomePage({ user, onSignOut }) {
                 id="file-upload"
                 type="file"
                 style={{ display: "none" }}
+                onChange={async (event) => {
+                    const file = event.target.files?.[0];
+                    await FileUploadService.uploadFile(file, user.tokens.idToken.toString());
+                }}
             />
         </label>
     </div>
