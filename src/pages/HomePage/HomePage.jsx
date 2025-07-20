@@ -5,6 +5,17 @@ import React from "react";
 import { FaUpload } from "react-icons/fa";
 
 export default function HomePage({ user, onSignOut }) {
+    const [uploading, setUploading] = React.useState(false);
+
+    const handleFileChange = async (event) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setUploading(true);
+            await FileUploadService.uploadFile(file, user.tokens.idToken.toString());
+            setUploading(false);
+        }
+    };
+
     return <>
     <Header email={user.email} onSignOut={onSignOut} />
     <div style={{
@@ -22,7 +33,7 @@ export default function HomePage({ user, onSignOut }) {
                 ...styles.primaryButton,
                 fontSize: "1.2rem",
                 marginTop: "2rem",
-                cursor: "pointer",
+                cursor: uploading ? "not-allowed" : "pointer",
                 display: "flex",
                 alignItems: "center",
                 gap: "0.5rem"
@@ -35,15 +46,13 @@ export default function HomePage({ user, onSignOut }) {
             }}
         >
             <FaUpload />
-            Upload File
+            {uploading ? "Uploading..." : "Upload File"}
             <input
                 id="file-upload"
                 type="file"
                 style={{ display: "none" }}
-                onChange={async (event) => {
-                    const file = event.target.files?.[0];
-                    await FileUploadService.uploadFile(file, user.tokens.idToken.toString());
-                }}
+                onChange={handleFileChange}
+                disabled={uploading}
             />
         </label>
     </div>
