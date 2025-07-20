@@ -1,0 +1,161 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  FileUploadBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Sub: ${AWS::StackName}-bucket
+      CorsConfiguration:
+        CorsRules:
+        - AllowedHeaders:
+          - '*'
+          AllowedMethods:
+          - GET
+          - PUT
+          - POST
+          - DELETE
+          AllowedOrigins:
+          - '*'
+          ExposedHeaders:
+          - ETag
+          MaxAge: 3000
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName:
+        Fn::Sub: ${AWS::StackName}-user-pool
+      AutoVerifiedAttributes:
+      - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+      Schema:
+      - Name: email
+        AttributeDataType: String
+        Required: true
+        Mutable: true
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId:
+        Ref: UserPool
+      ClientName:
+        Fn::Sub: ${AWS::StackName}-client
+      GenerateSecret: false
+      ExplicitAuthFlows:
+      - ALLOW_USER_SRP_AUTH
+      - ALLOW_USER_PASSWORD_AUTH
+      - ALLOW_REFRESH_TOKEN_AUTH
+      PreventUserExistenceErrors: ENABLED
+      CallbackURLs:
+      - http://localhost:3000
+      LogoutURLs:
+      - http://localhost:3000
+      AllowedOAuthFlows:
+      - code
+      AllowedOAuthScopes:
+      - email
+      - openid
+      - profile
+      - aws.cognito.signin.user.admin
+      SupportedIdentityProviders:
+      - COGNITO
+      AllowedOAuthFlowsUserPoolClient: true
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain:
+        Fn::Sub: ${AWS::StackName}-${AWS::Region}-domain
+      UserPoolId:
+        Ref: UserPool
+      ManagedLoginVersion: 2
+  ManagedLoginBranding:
+    Type: AWS::Cognito::ManagedLoginBranding
+    Properties:
+      UserPoolId:
+        Ref: UserPool
+      ClientId:
+        Ref: UserPoolClient
+      UseCognitoProvidedValues: true
+  IdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      IdentityPoolName:
+        Fn::Sub: ${AWS::StackName}-identity-pool
+      AllowUnauthenticatedIdentities: false
+      CognitoIdentityProviders:
+      - ClientId:
+          Ref: UserPoolClient
+        ProviderName:
+          Fn::Sub: cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}
+        ServerSideTokenCheck: true
+  AuthenticatedRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Federated: cognito-identity.amazonaws.com
+          Action: sts:AssumeRoleWithWebIdentity
+          Condition:
+            StringEquals:
+              cognito-identity.amazonaws.com:aud:
+                Ref: IdentityPool
+            ForAnyValue:StringLike:
+              cognito-identity.amazonaws.com:amr: authenticated
+      Policies:
+      - PolicyName: TranscribeStreamingPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - s3:PutObject
+            - s3:GetObject
+            Resource:
+            - Fn::Sub: arn:aws:s3:::${FileUploadBucket}/*
+          - Effect: Allow
+            Action:
+            - s3:ListBucket
+            Resource:
+            - Fn::Sub: arn:aws:s3:::${FileUploadBucket}/*
+  IdentityPoolRoleAttachment:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId:
+        Ref: IdentityPool
+      Roles:
+        authenticated:
+          Fn::GetAtt:
+          - AuthenticatedRole
+          - Arn
+Outputs:
+  UserPoolId:
+    Description: User Pool ID
+    Value:
+      Ref: UserPool
+  UserPoolClientId:
+    Description: User Pool Client ID
+    Value:
+      Ref: UserPoolClient
+  UserPoolDomain:
+    Description: Cognito Domain
+    Value:
+      Fn::Sub: ${AWS::StackName}-${AWS::Region}-domain.auth.${AWS::Region}.amazoncognito.com
+  IdentityPoolId:
+    Description: Identity Pool ID
+    Value:
+      Ref: IdentityPool
+  BucketName:
+    Description: Bucket Name
+    Value:
+      Ref: FileUploadBucket
