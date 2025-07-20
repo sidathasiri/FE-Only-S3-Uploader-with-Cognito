@@ -11,7 +11,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 - Set up your AWS credentials locally
 - Run `sam build`
 - Run `sam deploy`
-- Wait until the deployment is complete 
+- Follow the guide and wait until the deployment is complete 
 
 ## Starting the App Locally
 
